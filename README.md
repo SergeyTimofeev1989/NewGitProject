@@ -193,3 +193,89 @@ graph LR;
 А --> B;
 ```
 
+## Как исправить коммит
+
+Иногда в только что выполненном коммите нужно что-то поменять: например, добавить ещё пару файлов или заменить сообщение на более информативное.
+В таком случае можно внести правки в уже сделанный коммит с помощью опции _--amend_ (от англ. amend — «исправить», «дополнить») у команды commit: _git commit --amend_
+
+Важно: опция --amend работает только с последним коммитом (HEAD). Для исправления более ранних коммитов есть другие команды. 
+
+## Как откатиться назад, если «всё сломалось»
+
+###Выполнить unstage изменений — _git restore --staged <file>_
+
+Допустим, вы создали или изменили какой-то файл и добавили его в список «на коммит» (staging area) с помощью git add, но потом передумали включать его туда. Убрать файл из staging поможет команда git restore --staged <file> (от англ. restore — «восстановить»).
+
+ В выводе команды _git status_ есть подсказка в скобках: _use "git restore --staged <file>..." to unstage_. Так что, даже если вы и забыли эту команду, Git напомнит вам.
+
+
+```
+$ touch example.txt # создали ненужный файл
+$ git add example.txt # добавили его в staged
+
+$ git status # проверили статус
+Changes to be committed:
+  (use "git restore --staged <file>..." to unstage)
+        new file:   example.txt
+
+$ git restore --staged example.txt
+$ git status # проверили статус
+
+Untracked files:
+  (use "git add <file>..." to include in what will be committed)
+        example.txt
+
+no changes added to commit (use "git add" and/or "git commit -a")
+# файл example.txt из staged вернулся обратно в untracked 
+```
+
+Вызов _git restore --staged example.txt_ перевёл _example.txt_ из _staged_ обратно в _untracked_.
+
+Чтобы «сбросить» все файлы из _staged_ обратно в _untracked/modified_, можно воспользоваться командой _git restore --staged ._ : она сбросит всю текущую папку (.).
+
+Раньше для этой операции использовали команду _git reset HEAD_. Но _git reset_ «перегруженная»: она умеет делать много разных действий в зависимости от переданных параметров. Чтобы было меньше путаницы, в Git была добавлена отдельная команда _git restore_.
+
+### «Откатить» коммит — _git reset --hard <commit hash>_
+
+Иногда нужно «откатить» то, что уже было закоммичено, то есть вернуть состояние репозитория к более раннему. Для этого используют команду _git reset --hard <commit hash>_ (от англ. reset  — «сброс», «обнуление» и hard — «суровый»).
+
+```
+$ git log --oneline # хеш можно найти в истории
+7b972f5 (HEAD -> master) style: добавить комментарии, расставить отступы
+b576d89 feat: добавить массив Expenses и цикл для добавления трат # вот сюда и вернёмся
+4b58962 refactor: разделить analyzeExpenses() на countSum() и saveExpenses()
+
+$ git reset --hard b576d89
+# теперь мы на этом коммите
+HEAD is now at b576d89 feat: добавить массив Expenses и цикл для добавления трат 
+```
+
+Теперь коммит b576d89 стал последним: вся дальнейшая разработка будет вестись от него. Файл также вернулся к тому состоянию, в котором был в момент этого коммита. А коммит 7b972f5 Git просто удалил. Это можно проверить, снова запросив лог. Он покажет следующее.
+
+```
+$ git log --oneline
+b576d89 (HEAD -> master) feat: добавить массив Expenses и цикл для добавления трат
+4b58962 refactor: разделить analyzeExpenses() на countSum() и saveExpenses() 
+```
+
+### «Откатить» изменения, которые не попали ни в staging, ни в коммит, — _git restore <file>_
+
+Может быть так, что вы случайно изменили файл, который не планировали. Теперь он отображается в Changes not staged for commit (modified). Чтобы вернуть всё «как было», можно выполнить команду git restore <file>.
+
+```
+# случайно изменили файл example.txt
+$ git status
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+          modified:   example.txt
+
+$ git restore example.txt
+$ git status
+On branch main
+nothing to commit, working tree clean 
+```
+
+Изменения в файле «откатятся» до последней версии, которая была сохранена через _git commit_ или _git add_.
+
