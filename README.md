@@ -257,5 +257,24 @@ $ git log --oneline
 b576d89 (HEAD -> master) feat: добавить массив Expenses и цикл для добавления трат
 4b58962 refactor: разделить analyzeExpenses() на countSum() и saveExpenses() 
 ```
+### «Откатить» изменения, которые не попали ни в staging, ни в коммит, — _git restore <file>_
 
+Может быть так, что вы случайно изменили файл, который не планировали. Теперь он отображается в Changes not staged for commit (modified). Чтобы вернуть всё «как было», можно выполнить команду git restore <file>.
+
+```
+# случайно изменили файл example.txt
+$ git status
+On branch main
+Changes not staged for commit:
+  (use "git add <file>..." to update what will be committed)
+  (use "git restore <file>..." to discard changes in working directory)
+          modified:   example.txt
+
+$ git restore example.txt
+$ git status
+On branch main
+nothing to commit, working tree clean 
+```
+
+Изменения в файле «откатятся» до последней версии, которая была сохранена через _git commit_ или _git add_.
 
